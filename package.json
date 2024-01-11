@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "src",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -13,6 +13,9 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "front-end-development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js",
+    "front-end-watch": "npm run front-end-development -- --watch",
+    "front-end-production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -20,24 +23,39 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@babel/core": "^7.19.1",
+    "@babel/preset-env": "^7.19.1",
+    "@babel/preset-react": "^7.18.6",
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/serve-static": "^4.0.0",
+    "@nestjs/typeorm": "^10.0.1",
+    "bcryptjs": "^2.4.3",
+    "class-validator": "^0.14.0",
+    "express-session": "^1.17.3",
+    "pg": "^8.11.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "hbs": "^4.2.0",
+    "typeorm": "^0.3.19",
+    "typeorm-naming-strategies": "^4.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.10",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "babel-loader": "^9.1.3",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -49,7 +67,9 @@
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   },
   "jest": {
     "moduleFileExtensions": [

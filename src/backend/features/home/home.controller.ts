@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Render } from '@nestjs/common';
 import { HomeService } from './home.service';
 
 @Controller()
@@ -6,7 +6,6 @@ export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 
   @Get()
-  getHello(): string {
-    return this.homeService.getHello();
-  }
+  @Render('home')
+  home(){}
 }
