@@ -10,24 +10,6 @@ export class RegistrationRequest {
     })
     email: string;
 
-    @MinLength(2, {
-      message: 'First name must be at least 2 symbols.',
-    })
-    @MaxLength(50, {
-      message: 'First name must be below 50 symbols.',
-    })
-    firstName: string;
-
-
-    @MinLength(2, {
-      message: 'First name must be at least 2 symbols.',
-    })
-    @MaxLength(50, {
-      message: 'First name must be below 50 symbols.',
-    })
-    lastName: string;
-
-
     @MinLength(6, {
       message: 'Password must be at least 6 symbols.',
     })

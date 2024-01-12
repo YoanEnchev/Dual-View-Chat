@@ -5,7 +5,7 @@ module.exports = {
     extensions: ['.js', '.ts', '.json', '.jsx', '.tsx', '.wasm'], // Add your extensions here.
   },
   entry: {
-    index: './src/frontend/index.js'
+    index: './src/frontend/index.ts'
   },
   output: {
     filename: 'app.bundle.js',

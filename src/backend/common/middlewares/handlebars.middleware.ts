@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, } from 'express';
-import { ISessionAttributes } from '../session/ISessionAttributes';
+import { ISessionAttributes } from '../interfaces/session/ISessionAttributes';
 
 @Injectable()
 export class HandlebarsMiddleware implements NestMiddleware {

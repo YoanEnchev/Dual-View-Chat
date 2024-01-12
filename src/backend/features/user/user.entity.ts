@@ -25,10 +25,7 @@ import * as bcrypt from 'bcryptjs';
     @BeforeInsert()
     @BeforeUpdate()
     async setPassword() {
-
-      console.log('bcrypt', bcrypt)
       const salt = await bcrypt.genSalt();
       this.password = await bcrypt.hash(this.password, salt);
-  
     }
   }

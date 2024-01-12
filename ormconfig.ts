@@ -3,7 +3,7 @@ import { registerAs } from "@nestjs/config";
 import { config as dotenvConfig } from 'dotenv';
 import { DataSource, DataSourceOptions } from "typeorm";
 
-dotenvConfig({ path: '../.env' });
+dotenvConfig({ path: './.env' });
 
 const config = {
   namingStrategy: new SnakeNamingStrategy(),
@@ -17,7 +17,7 @@ const config = {
 
   name: 'default',
   entities: [
-    'dist/src/**/*.entity.{ts,js}'
+    'dist/src/backend/features/**/*.entity.{ts,js}'
     // 'src/**/*.entity.{ts,js}' // Use for seeding
   ],
   synchronize: true,
@@ -25,6 +25,7 @@ const config = {
   migrationsTableName: "migrations_typeorm",
   migrationsRun: true
 };
+console.log('Config:', config)
 
 export default registerAs('typeorm', () => config)
 export const connectionSource = new DataSource(config as DataSourceOptions);

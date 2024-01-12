@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Render, Redirect, Req, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Render, Redirect, Req, Res, HttpStatus, HttpException } from '@nestjs/common';
 import * as express from 'express';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
+import IServiceOperationResponse from 'src/backend/common/interfaces/IServiceOperationResponse';
+import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
 
 @Controller()
 export class AuthController {
@@ -12,9 +14,14 @@ export class AuthController {
   @Render('auth/register')
   showRegistrationForm() {}
 
-  @Post('/register')
+  @Post('/auth/register')
   async register(@Req() request: Request) {
-    this.authService.handleRegistration(request);
+    
+    const registationResult: IServiceOperationResponse = await this.authService.handleRegistration(request);
+
+    if (registationResult.status == ServiceOperationStatuses.ERROR) {
+      throw new HttpException({message: registationResult.errorMessage}, HttpStatus.BAD_REQUEST);
+    }
 
     return {message: 'Successful registration.'};
   }
@@ -23,17 +30,39 @@ export class AuthController {
   @Render('auth/login')
   showLoginForm() {}
 
-  @Post('/login')
+  @Post('/auth/login')
   async login(@Req() request: express.Request) {
     
-    this.authService.handleLogin(request);
+    const loginResult = await this.authService.handleLogin(request);
 
-    return {message: 'Successful login.'};
+    if (loginResult.status == ServiceOperationStatuses.ERROR) {
+      throw new HttpException({message: loginResult.errorMessage}, HttpStatus.BAD_REQUEST);
+    }
+
+    return {message: 'Successful registration.'};
   }
 
   @Post('/logout')
   @Redirect('/succ-logout', 302)
-  async logout(@Req() request: express.Request) {
+  logout(@Req() request: express.Request) {
     return this.authService.logoutUser(request);
+  }
+
+  @Get('/succ-login')
+  @Render('auth/successful-login')
+  successfulLogin() {
+    return {}
+  }
+
+  @Get('/succ-registration')
+  @Render('auth/successful-registration')
+  successfulRegistration() {
+    return {}
+  }
+
+  @Get('/succ-logout')
+  @Render('auth/successful-logout')
+  successfulLogout() {
+    return {}
   }
 }
