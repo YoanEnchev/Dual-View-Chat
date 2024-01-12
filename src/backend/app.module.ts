@@ -7,12 +7,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './features/auth/auth.module';
 import { UserModule } from './features/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatModule } from './features/chat/chat.module';
 
 
 @Module({
   imports: [HomeModule, 
     AuthModule,
     UserModule,
+    ChatModule,
     ServeStaticModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

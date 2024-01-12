@@ -11,10 +11,10 @@ export class UserService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(рegistrationRequest: RegistrationRequest): Promise<User> {
+  async create(registrationRequest: RegistrationRequest): Promise<User> {
     
     return this.usersRepository.save(
-      this.usersRepository.create({...рegistrationRequest}),
+      this.usersRepository.create({...registrationRequest}),
     );
   }
 

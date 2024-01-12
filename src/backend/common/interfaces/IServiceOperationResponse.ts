@@ -2,7 +2,7 @@ import ServiceOperationStatuses from "../enums/ServiceOperationStatuses"
 
 interface IServiceOperationResponse {
     status: ServiceOperationStatuses,
-    errorMessage?: string 
+    errorMessage?: string,
 }
   
 export default IServiceOperationResponse
