@@ -10,6 +10,7 @@ import { validate } from 'class-validator';
 import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
 import ICreateMessageServiceResponse from './serviceOperationResponses/IExtractChatMessages';
 import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
+import IServiceOperationResponse from 'src/backend/common/interfaces/IServiceOperationResponse';
 
 @Injectable()
 export class MessageService {
@@ -18,17 +19,9 @@ export class MessageService {
     private messageRepository: Repository<Message>,
   ) {}
 
-  async create(req: express.Request, chatID: number, isFromUser: boolean): Promise<ICreateMessageServiceResponse> {
-
-    const messageCreationRequest: MessageCreateRequest = Object.assign(new MessageCreateRequest(), req.body);
-
-    const errors = await validate(messageCreationRequest);
-
-    if (errors.length > 0) {
-      return {
-        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: Object.values(errors[0].constraints)[0]
-      };
-    }
+  // Must be called only after the method for validating the message's text.
+  // TODO: Consider if user/gpts sends XSS attack: <script>alert('xx')</script>
+  async create(req: express.Request, chatID: number, msgText: string, isFromUser: boolean): Promise<ICreateMessageServiceResponse> {
 
     const sessionData = req.session as ISessionAttributes;
 
@@ -43,7 +36,7 @@ export class MessageService {
     try {
       const message: Message = await this.messageRepository.save(
         this.messageRepository.create({
-          text: messageCreationRequest.text.trim(),
+          text: msgText.trim(),
           chat: {
             id: chatID
           },
@@ -70,5 +63,22 @@ export class MessageService {
         errorMessage: 'Service not available'
       }
     }
+  }
+
+  // msgText is of type any and will be validated (including it's type) in MessageCreateRequest.
+  async msgTextIsValid(msgText: any): Promise<IServiceOperationResponse> {
+    const messageCreationRequest: MessageCreateRequest = Object.assign(new MessageCreateRequest(), {
+      text: msgText
+    });
+
+    const errors = await validate(messageCreationRequest);
+
+    if (errors.length > 0) {
+      return {
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: Object.values(errors[0].constraints)[0]
+      };
+    }
+
+    return {status: ServiceOperationStatuses.SUCCESS};
   }
 }

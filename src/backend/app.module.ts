@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatModule } from './features/chat/chat.module';
 import { isAuthenticatedMiddleware } from './common/middlewares/is-authenticated.middleware';
 import { MessageModule } from './features/message/message.module';
+import { OpenAIGPTModule } from './features/open-ai-gpt/open-ai-gpt.module';
 
 
 @Module({
@@ -18,6 +19,7 @@ import { MessageModule } from './features/message/message.module';
     UserModule,
     ChatModule,
     MessageModule,
+    OpenAIGPTModule,
     ServeStaticModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

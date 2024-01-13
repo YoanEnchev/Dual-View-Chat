@@ -25,7 +25,6 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
             res.json().then(jsonData => {
                 if (res.ok) {
                     // Load older messages and add them on top.
-                    console.log('------->', jsonData, messages, '<------')
                     setMessages([...jsonData, ...messagesRef.current])
                     setTopErrorMessage('')
                 }
@@ -61,9 +60,12 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
             if (res.ok) {
                 setTopErrorMessage('');
                 setValueInTextbox('');
-                const newMessage: IMessageJSONFormat = json.messageObject
+                const newMessages: IMessageJSONFormat[] = json.messagesObjects
+
+                console.log('newMessages::', newMessages)
                 
-                setMessages([...messagesRef.current, newMessage])
+                setMessages([...messagesRef.current, ...newMessages])
+                scrollToBottomMsgContainer();
                 return;
             }
 
@@ -91,14 +93,18 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
         }
     };
 
+    const scrollToBottomMsgContainer = () => {
+        setTimeout(() => {
+            // Wait for new messages to render, then set scrollbar to bottom.
+            messagesScrollContainerRef.current.scrollTop = messagesScrollContainerRef.current.scrollHeight;
+        }, 300)
+    }
+
     useEffect(() => {
         // Load initial (most recent) messages.
         fetchMessages(0)
             .then(() => {
-                setTimeout(() => {
-                    // Wait for initial messages to render, then set scrollbar to bottom.
-                    messagesScrollContainerRef.current.scrollTop = messagesScrollContainerRef.current.scrollHeight;
-                }, 300)
+                scrollToBottomMsgContainer();
             })
         
 

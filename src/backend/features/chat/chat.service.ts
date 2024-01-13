@@ -50,7 +50,6 @@ export class ChatService {
       // Implement better logging if deploying to production.
       console.error('Error in ChatService.initializeUserChatsIfNeeded:', error);
 
-
       return {status: ServiceOperationStatuses.INTERNAL_ERROR, errorMessage: 'Service not available. Please try again later.'}
     }
   }

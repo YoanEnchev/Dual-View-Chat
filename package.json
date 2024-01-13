@@ -37,6 +37,7 @@
     "express-handlebars": "^7.1.2",
     "express-session": "^1.17.3",
     "hbs": "^4.2.0",
+    "openai": "^4.24.7",
     "pg": "^8.11.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
