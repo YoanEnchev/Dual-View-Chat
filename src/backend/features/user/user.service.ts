@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../user/user.entity';
 import { RegistrationRequest } from '../auth/validations/user.register';
 
@@ -18,10 +18,6 @@ export class UserService {
     );
   }
 
-  find(): Promise<User[]> {
-    return this.usersRepository.find();
-  }
-
   findByEmail(email: string): Promise<User|null> {
     return this.usersRepository.findOne({
       where: {email},
@@ -32,18 +28,5 @@ export class UserService {
     return !!this.usersRepository.findOne({
       where: {id}
     })
-  }
-
-  update(id: User['id'], payload: DeepPartial<User>): Promise<User> {
-    return this.usersRepository.save(
-      this.usersRepository.create({
-        id,
-        ...payload,
-      }),
-    );
-  }
-
-  async delete(id: User['id']): Promise<void> {
-    await this.usersRepository.delete(id);
   }
 }

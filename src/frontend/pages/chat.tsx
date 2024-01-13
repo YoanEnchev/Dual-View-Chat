@@ -1,11 +1,13 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom/client'
-import DualChatRoom from '../components/chat/DualChatRoom/DualChatRoom';
+import ChatRoomsWrapper from '../components/chat/ChatRoomsWrapper/ChatRoomsWrapper';
 
-const chatContainer = document.querySelector('#dual-chat-container')
+const chatContainer = document.querySelector('#chats-container')
 
 if (chatContainer) {
-    
+    // @ts-ignore
+    const chatIDs: number[] = fromServer.chatsIDs
+
     ReactDOM.createRoot(chatContainer)
-        .render(<DualChatRoom />);
+        .render(<ChatRoomsWrapper chatIDs={chatIDs} />);
 }

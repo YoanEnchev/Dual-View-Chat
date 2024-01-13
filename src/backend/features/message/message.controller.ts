@@ -1,16 +1,17 @@
-import { Controller, Get, HttpException, HttpStatus, Param, Post, Req } from '@nestjs/common';
+import { Controller, HttpException, HttpStatus, Param, Post, Req } from '@nestjs/common';
 import { MessageService } from './message.service';
 import * as express from 'express';
 import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
+import ICreateMessageServiceResponse from './serviceOperationResponses/IExtractChatMessages';
 
 @Controller()
 export class MessageController {
-  constructor(private readonly messageService: MessageService,) {}
+  constructor(private readonly messageService: MessageService) {}
 
   @Post('/chats/:chatID/message')
   async create(@Param('chatID') chatID: number, @Req() request: express.Request) {
     
-    const result = await this.messageService.create(request, chatID, true);
+    const result: ICreateMessageServiceResponse = await this.messageService.create(request, chatID, true);
 
     if (result.status != ServiceOperationStatuses.SUCCESS) {
       throw new HttpException(
@@ -19,6 +20,6 @@ export class MessageController {
       );
     }
 
-    return {message: 'Successful message creation.'};
+    return {messageObject: result.messageObject};
   }
 }

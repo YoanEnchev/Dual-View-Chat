@@ -3,16 +3,22 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 import { User } from '../user/user.entity';
+import * as express from 'express';
 import IInitializingUserChats from './serviceOperationResponses/IInitializingUserChats';
 import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
-import { Message } from '../message/message.entity';
 import IExtractChatMessages from './serviceOperationResponses/IExtractChatMessages';
+import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
+import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
+import { Message } from '../message/message.entity';
 
 @Injectable()
 export class ChatService {
   constructor(
     @InjectRepository(Chat)
     private chatRepository: Repository<Chat>,
+
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
 
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
@@ -49,8 +55,20 @@ export class ChatService {
     }
   }
 
-  async getMessages(user: User, chatId: number, skip: number): Promise<IExtractChatMessages> {
+  async getMessages(req: express.Request, chatId: number, skip: number): Promise<IExtractChatMessages> {
 
+    if (!Number.isInteger(skip) && skip > 1000) {
+      return {
+        status: ServiceOperationStatuses.BAD_REQUEST, 
+        errorMessage: "Invalid value for skip parameter"
+      }
+    }
+    
+    const sessionData = req.session as ISessionAttributes;
+
+    // User is expected to always be set (authenticated) when accessing this route.
+    const user:User = sessionData.user!
+    
     try {
       if (!user.chats.some(chat => chat.id)) {
         return {
@@ -59,25 +77,27 @@ export class ChatService {
         }
       }
 
-      const chat = await this.chatRepository
-        .createQueryBuilder('chat')
-        .leftJoinAndSelect('chat.messages', 'message')
-        .where('chat.id = :chatId', { chatId })
-        .orderBy('message.createdAt', 'DESC')
+      const messages: Message[] = await this.messageRepository
+        .createQueryBuilder('msg')
+        .where('msg.chat_id = :chatId', { chatId })
+        .orderBy('msg.createdAt', 'DESC')
         .skip(skip)
         .take(10)
-        .getOne();
-
-      if (!chat) {
-        return {
-          status: ServiceOperationStatuses.BAD_REQUEST, 
-          errorMessage: 'Chat not found'
-        }
-      }
+        .getMany()
+        
+      // Sort the messages array in ascending order if needed
+      const sortedMessages: Message[] =messages.sort((a: Message, b: Message) => a.createdAt.getTime() - b.createdAt.getTime());
 
       return {
         status: ServiceOperationStatuses.SUCCESS,
-        messages: chat.messages
+        messages: sortedMessages.map((message: Message) => {
+          const responseResult: IMessageJSONFormat = {
+            text: message.text,
+            isFromUser: message.isFromUser
+          }
+          
+          return responseResult
+        })
       }
     }
     catch (error) {

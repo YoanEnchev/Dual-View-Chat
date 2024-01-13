@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, HttpStatus, Param, Render, Req } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Param, Query, Render, Req } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import * as express from 'express';
 import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
@@ -29,17 +29,15 @@ export class ChatController {
 
     return {
       fromServer: {
-        chatsIDS: result.chats!.map((chat: Chat) => chat.id)
+        chatsIDs: result.chats!.map((chat: Chat) => chat.id)
       }
     }
   }
 
   @Get('/chats/:chatID/messages')
-  async create(@Param('chatID') chatID: number, @Req() req: express.Request) {
-    const sessionData = req.session as ISessionAttributes;
-
-    // User is expected to always be set (authenticated) when accessing this route.
-    const result: IExtractChatMessages = await this.chatService.getMessages(sessionData.user!, chatID, 0);
+  async getMessages(@Param('chatID') chatID: number, @Query('skip') skip: number, @Req() req: express.Request) {
+      
+    const result: IExtractChatMessages = await this.chatService.getMessages(req, chatID, skip);
 
     if (result.status != ServiceOperationStatuses.SUCCESS) {
       throw new HttpException(

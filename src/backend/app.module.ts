@@ -9,6 +9,7 @@ import { UserModule } from './features/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatModule } from './features/chat/chat.module';
 import { isAuthenticatedMiddleware } from './common/middlewares/is-authenticated.middleware';
+import { MessageModule } from './features/message/message.module';
 
 
 @Module({
@@ -16,6 +17,7 @@ import { isAuthenticatedMiddleware } from './common/middlewares/is-authenticated
     AuthModule,
     UserModule,
     ChatModule,
+    MessageModule,
     ServeStaticModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

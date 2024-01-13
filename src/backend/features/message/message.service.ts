@@ -6,21 +6,19 @@ import { Message } from './message.entity';
 import { MessageCreateRequest } from './requests/message.create';
 import { Chat } from '../chat/chat.entity';
 import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
-import IServiceOperationResponse from 'src/backend/common/interfaces/IServiceOperationResponse';
 import { validate } from 'class-validator';
 import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
+import ICreateMessageServiceResponse from './serviceOperationResponses/IExtractChatMessages';
+import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
-
-    @InjectRepository(Chat)
-    private chatRepository: Repository<Chat>,
   ) {}
 
-  async create(req: express.Request, chatID: number, isFromUser: boolean): Promise<IServiceOperationResponse> {
+  async create(req: express.Request, chatID: number, isFromUser: boolean): Promise<ICreateMessageServiceResponse> {
 
     const messageCreationRequest: MessageCreateRequest = Object.assign(new MessageCreateRequest(), req.body);
 
@@ -32,35 +30,45 @@ export class MessageService {
       };
     }
 
-    const chat: Chat|null = await this.chatRepository.findOne({where: {id: chatID}})
-
-    if (chat == null) {
-      return {
-        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'Chat with such id does not exist.'
-      };
-    }
-
     const sessionData = req.session as ISessionAttributes;
 
     // Assume user is logged in.
     // Guest will not be allowed to permit this operation.
-    if (chat.user.id != sessionData.user!.id) {
+    if (!sessionData.user!.chats.some((chat: Chat) => chat.id == chatID)) {
       return {
         status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'The chat does not belong to this user.'
       };
     }
 
-    await this.messageRepository.save(
-      this.messageRepository.create({
-        text: messageCreationRequest.text,
-        chat: {
-          id: chat.id
-        }
-      }),
-    );
+    try {
+      const message: Message = await this.messageRepository.save(
+        this.messageRepository.create({
+          text: messageCreationRequest.text.trim(),
+          chat: {
+            id: chatID
+          },
+          isFromUser
+        }),
+      );
 
-    return {
-      status: ServiceOperationStatuses.SUCCESS
+      const messageObjectResponse: IMessageJSONFormat = {
+        text: message.text,
+        isFromUser: message.isFromUser
+      }
+
+      return {
+        status: ServiceOperationStatuses.SUCCESS,
+        messageObject: messageObjectResponse
+      }
+    }
+    catch (error) {
+      // Implement better logging if deploying to production.
+      console.error('Error in MessageService.create:', error);
+
+      return {
+        status: ServiceOperationStatuses.INTERNAL_ERROR,
+        errorMessage: 'Service not available'
+      }
     }
   }
 }
