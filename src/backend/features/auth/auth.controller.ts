@@ -17,10 +17,13 @@ export class AuthController {
   @Post('/auth/register')
   async register(@Req() request: Request) {
     
-    const registationResult: IServiceOperationResponse = await this.authService.handleRegistration(request);
+    const result: IServiceOperationResponse = await this.authService.handleRegistration(request);
 
-    if (registationResult.status == ServiceOperationStatuses.ERROR) {
-      throw new HttpException({message: registationResult.errorMessage}, HttpStatus.BAD_REQUEST);
+    if (result.status != ServiceOperationStatuses.SUCCESS) {
+      throw new HttpException(
+        {message: result.errorMessage}, 
+        result.status == ServiceOperationStatuses.BAD_REQUEST ? HttpStatus.BAD_REQUEST : HttpStatus.SERVICE_UNAVAILABLE
+      );
     }
 
     return {message: 'Successful registration.'};
@@ -33,10 +36,13 @@ export class AuthController {
   @Post('/auth/login')
   async login(@Req() request: express.Request) {
     
-    const loginResult = await this.authService.handleLogin(request);
+    const result = await this.authService.handleLogin(request);
 
-    if (loginResult.status == ServiceOperationStatuses.ERROR) {
-      throw new HttpException({message: loginResult.errorMessage}, HttpStatus.BAD_REQUEST);
+    if (result.status != ServiceOperationStatuses.SUCCESS) {
+      throw new HttpException(
+        {message: result.errorMessage}, 
+        result.status == ServiceOperationStatuses.BAD_REQUEST ? HttpStatus.BAD_REQUEST : HttpStatus.SERVICE_UNAVAILABLE
+      );
     }
 
     return {message: 'Successful registration.'};

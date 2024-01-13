@@ -1,6 +1,7 @@
 enum ServiceOperationStatuses {
     SUCCESS = 'SUCCESS',
-    ERROR = 'ERROR'
+    BAD_REQUEST = 'BAD_REQUEST',
+    INTERNAL_ERROR = 'INTERNAL_ERROR'
 }
 
 export default ServiceOperationStatuses

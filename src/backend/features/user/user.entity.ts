@@ -24,7 +24,7 @@ import { Chat } from '../chat/chat.entity';
   
     public previousPassword: string;
 
-    @OneToMany(() => Chat, chat => chat.user)
+    @OneToMany(() => Chat, chat => chat.user, { eager: true })
     chats: Chat[];
   
     @BeforeInsert()

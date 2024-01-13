@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { useContainer } from 'class-validator';
 import session from 'express-session';
+import hbs from 'hbs';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,6 +13,10 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
   app.setViewEngine('hbs');
+
+  hbs.registerHelper('json', function(context) {
+    return JSON.stringify(context);
+  });
 
   useContainer(app, { fallbackOnErrors: true });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });

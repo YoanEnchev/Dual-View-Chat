@@ -24,7 +24,7 @@ export class AuthService {
 
     if (errors.length > 0) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: Object.values(errors[0].constraints)[0]
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: Object.values(errors[0].constraints)[0]
       }
     }
 
@@ -43,7 +43,7 @@ export class AuthService {
 
     if (errors.length > 0) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: Object.values(errors[0].constraints)[0]
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: Object.values(errors[0].constraints)[0]
       }
     }
 
@@ -51,7 +51,7 @@ export class AuthService {
 
     if (!user) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: 'User with such email does not exist.'
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'User with such email does not exist.'
       }
     }
 
@@ -59,7 +59,7 @@ export class AuthService {
 
     if (!isValidPassword) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: 'Password mismatch.'
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'Password mismatch.'
       }
     }
 

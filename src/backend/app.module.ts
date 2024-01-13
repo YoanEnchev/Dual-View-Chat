@@ -8,6 +8,7 @@ import { AuthModule } from './features/auth/auth.module';
 import { UserModule } from './features/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatModule } from './features/chat/chat.module';
+import { isAuthenticatedMiddleware } from './common/middlewares/is-authenticated.middleware';
 
 
 @Module({
@@ -31,5 +32,6 @@ import { ChatModule } from './features/chat/chat.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(HandlebarsMiddleware).forRoutes('*');
+    consumer.apply(isAuthenticatedMiddleware).forRoutes('/chats');
   }
 }

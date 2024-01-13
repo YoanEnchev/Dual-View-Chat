@@ -1,5 +1,6 @@
 import {
   Column,
+    CreateDateColumn,
     Entity,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -20,4 +21,7 @@ export class Message {
   @Column({name: 'is_from_user'})
   // If it's false it's generated response from GPT model.
   isFromUser: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

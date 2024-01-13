@@ -12,7 +12,7 @@ export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.id, { eager: true })
+  @ManyToOne(() => User, user => user.id)
   user: User;
 
   @OneToMany(() => Message, message => message.chat)

@@ -20,7 +20,7 @@ export class MessageService {
     private chatRepository: Repository<Chat>,
   ) {}
 
-  async create(req: express.Request, isFromUser: boolean): Promise<IServiceOperationResponse> {
+  async create(req: express.Request, chatID: number, isFromUser: boolean): Promise<IServiceOperationResponse> {
 
     const messageCreationRequest: MessageCreateRequest = Object.assign(new MessageCreateRequest(), req.body);
 
@@ -28,15 +28,15 @@ export class MessageService {
 
     if (errors.length > 0) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: Object.values(errors[0].constraints)[0]
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: Object.values(errors[0].constraints)[0]
       };
     }
 
-    const chat: Chat|null = await this.chatRepository.findOne({where: {id: messageCreationRequest.chatID}})
+    const chat: Chat|null = await this.chatRepository.findOne({where: {id: chatID}})
 
     if (chat == null) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: 'Chat with such id does not exist.'
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'Chat with such id does not exist.'
       };
     }
 
@@ -46,14 +46,16 @@ export class MessageService {
     // Guest will not be allowed to permit this operation.
     if (chat.user.id != sessionData.user!.id) {
       return {
-        status: ServiceOperationStatuses.ERROR, errorMessage: 'The chat does not belong to this user.'
+        status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'The chat does not belong to this user.'
       };
     }
 
     await this.messageRepository.save(
       this.messageRepository.create({
         text: messageCreationRequest.text,
-        chat: chat
+        chat: {
+          id: chat.id
+        }
       }),
     );
 
