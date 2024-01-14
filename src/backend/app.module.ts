@@ -36,6 +36,7 @@ import { OpenAIGPTModule } from './features/open-ai-gpt/open-ai-gpt.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(HandlebarsMiddleware).forRoutes('*');
-    consumer.apply(isAuthenticatedMiddleware).forRoutes('/chats');
+    consumer.apply(isAuthenticatedMiddleware).forRoutes('/chats', '/user');
+    
   }
 }

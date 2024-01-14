@@ -15,10 +15,8 @@ export class ChatController {
   @Render('chats/index')
   async list(@Req() req: express.Request) {
 
-    const sessionData = req.session as ISessionAttributes;
-
     // User is expected to always be set (authenticated) when accessing this route.
-    const result: IInitializingUserChats = await this.chatService.initializeUserChatsIfNeeded(sessionData.user!)
+    const result: IInitializingUserChats = await this.chatService.initializeUserChatsIfNeeded(req)
 
     if (result.status != ServiceOperationStatuses.SUCCESS) {
       throw new HttpException(

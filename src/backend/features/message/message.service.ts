@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as express from 'express';
 import { Repository } from 'typeorm';
 import { Message } from './message.entity';
 import { MessageCreateRequest } from './requests/message.create';
-import { Chat } from '../chat/chat.entity';
 import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
 import { validate } from 'class-validator';
-import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
 import ICreateMessageServiceResponse from './serviceOperationResponses/IExtractChatMessages';
 import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
 import IServiceOperationResponse from 'src/backend/common/interfaces/IServiceOperationResponse';
+import IDataFromAccessToken from '../auth/interfaces/IDataFromAccessToken';
 
 @Injectable()
 export class MessageService {
@@ -20,14 +18,9 @@ export class MessageService {
   ) {}
 
   // Must be called only after the method for validating the message's text.
-  // TODO: Consider if user/gpts sends XSS attack: <script>alert('xx')</script>
-  async create(req: express.Request, chatID: number, msgText: string, isFromUser: boolean): Promise<ICreateMessageServiceResponse> {
+  async create(dataFromAccessToken: IDataFromAccessToken, chatID: number, msgText: string, isFromUser: boolean): Promise<ICreateMessageServiceResponse> {
 
-    const sessionData = req.session as ISessionAttributes;
-
-    // Assume user is logged in.
-    // Guest will not be allowed to permit this operation.
-    if (!sessionData.user!.chats.some((chat: Chat) => chat.id == chatID)) {
+    if (!dataFromAccessToken.chatIDs.some((loopChatID: number) => loopChatID == chatID)) {
       return {
         status: ServiceOperationStatuses.BAD_REQUEST, errorMessage: 'The chat does not belong to this user.'
       };

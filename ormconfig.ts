@@ -25,7 +25,6 @@ const config = {
   migrationsTableName: "migrations_typeorm",
   migrationsRun: true
 };
-console.log('Config:', config)
 
 export default registerAs('typeorm', () => config)
 export const connectionSource = new DataSource(config as DataSourceOptions);

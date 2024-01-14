@@ -71,4 +71,9 @@ export class AuthController {
   successfulLogout() {
     return {}
   }
+
+  @Get('/user/access-token')
+  getAccessToken(@Req() req: express.Request) {
+    return this.authService.getUserAccessToken(req);
+  }
 }

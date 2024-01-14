@@ -2,16 +2,21 @@ import React, { FC, ChangeEvent, FormEvent, useState, useEffect, useRef } from '
 import getAppBaseURL from '../../../helpers/getAppBaseURL';
 import IChatRoom from './IChatRoom';
 import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
+import io, { Socket } from 'socket.io-client';
+import UserPublishesMessagePayload from 'src/shared/interfaces/UserPublishesMessagePayload';
+import IMessageProcessingError from 'src/shared/interfaces/IMessageProcessingError';
 
-const ChatRoom: FC<IChatRoom> = ({chatID}) => {
+const ChatRoom: FC<IChatRoom> = ({chatID, userAccessToken}) => {
 
     const [topErrorMessage, setTopErrorMessage] = useState<string>('');
     const [messages, setMessages] = useState<IMessageJSONFormat>([]);
-    const [isProcessingMessage, setIsProcessingMessage] = useState<boolean>(false);
     const [valueInTextbox, setValueInTextbox] = useState<string>('');
+    const [isAwaitingGPTResponse, setIsAwaitingGPTResponse] = useState<boolean>(false);
 
     const messagesScrollContainerRef = useRef<HTMLDivElement>(null);
     const messagesRef = useRef<number>([]) // So we can access most recent count of the messages state inside callbacks such as handleScroll.
+    const socketRef = useRef<Socket|null>(null);
+    const msgIDAwaitingGPTResponseRef = useRef<number|null>(null);
 
     const fetchMessages = async (skip: number) => {
         try {
@@ -41,43 +46,18 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setIsProcessingMessage(true)
+        setValueInTextbox('');
 
-        try {
-            const res: Response = await fetch(`${getAppBaseURL()}/chats/${chatID}/message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: valueInTextbox,
-                    chatID,
-                }),
-            })
+        msgIDAwaitingGPTResponseRef.current = `${chatID}-${Math.floor(Math.random() * 100_000_000_000_000)}`
 
-            const json = await res.json();
-
-            if (res.ok) {
-                setTopErrorMessage('');
-                setValueInTextbox('');
-                const newMessages: IMessageJSONFormat[] = json.messagesObjects
-
-                console.log('newMessages::', newMessages)
-                
-                setMessages([...messagesRef.current, ...newMessages])
-                scrollToBottomMsgContainer();
-                return;
-            }
-
-            setTopErrorMessage(json.message)
+        const payload: UserPublishesMessagePayload = {
+            msgText: valueInTextbox,
+            chatID, userAccessToken,
+            msgClientID: msgIDAwaitingGPTResponseRef.current
         }
-        catch (error) {
-            console.log(error)
-            setTopErrorMessage('Service not available. Please try again later.')
-        }
-        finally {
-            setIsProcessingMessage(false)
-        }
+
+        setIsAwaitingGPTResponse(true);
+        socketRef.current.emit('user-publishes-message', payload);
     };
 
     const onMessageTyping = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -112,12 +92,40 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
         if (messagesScrollContainerRef.current) {
             messagesScrollContainerRef.current.addEventListener('scroll', handleScroll);
         }
+
+        const { hostname } = window.location
+        socketRef.current = io(`http://${hostname}:4001`);
+    
+        // Listen for the "messageCreated" event
+        socketRef.current.on(`message-inserted-for-chat-${chatID}`, (messageObject: IMessageJSONFormat) => {
+            // Handle the new message
+            setMessages((prevMessages) => [...prevMessages, messageObject]);
+            setTopErrorMessage('');
+
+            scrollToBottomMsgContainer();
+
+            if (messageObject.gptResponseToClientIDMsg == msgIDAwaitingGPTResponseRef.current) {
+                setIsAwaitingGPTResponse(false)
+            }
+        });
+
+        socketRef.current.on(`error-for-chat-${chatID}`, (errorData: IMessageProcessingError) => {
+            setTopErrorMessage(errorData.errorMessage);
+
+            if (errorData.msgClientID == msgIDAwaitingGPTResponseRef.current) {
+                setIsAwaitingGPTResponse(false)
+            }
+        });
+
+        socketRef.current.on('error', (err) => console.log('error', err));
   
         // Clean up the event listener on component unmount
         return () => {
             if (messagesScrollContainerRef.current) {
                 messagesScrollContainerRef.current.removeEventListener('scroll', handleScroll);
             }
+
+            if (socketRef.current) socketRef.current.disconnect();
         }
     }, [])
 
@@ -131,7 +139,7 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
       <div className="card-body">
         {topErrorMessage ? <p className="text-danger">{topErrorMessage}</p> : <></>}
         
-        <div style={{ height: 300, overflowY: "auto" }} ref={messagesScrollContainerRef}> 
+        <div style={{ height: 450, overflowY: "auto" }} ref={messagesScrollContainerRef}> 
             {messages.map((msg: IMessageJSONFormat, index: number) => <div className={`mt-2 alert alert-${msg.isFromUser ? 'primary' : 'secondary'}`} key={index}>
             <strong>{msg.isFromUser ? 'You' : 'GPT Model'}:</strong> {msg.text}
           </div>)}
@@ -149,8 +157,8 @@ const ChatRoom: FC<IChatRoom> = ({chatID}) => {
                 onChange={onMessageTyping}
                 required
             />
-            <button className="btn btn-primary" disabled={isProcessingMessage} type='submit'>
-                {isProcessingMessage ? 'Processing...' : 'Send'}
+            <button className="btn btn-primary" type='submit' disabled={isAwaitingGPTResponse}>
+                {isAwaitingGPTResponse ? 'Processing...' : 'Send'}
             </button>
             </div>
         </form>

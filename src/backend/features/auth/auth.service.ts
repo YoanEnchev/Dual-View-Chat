@@ -9,12 +9,15 @@ import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessi
 import { User } from '../user/user.entity';
 import IServiceOperationResponse from 'src/backend/common/interfaces/IServiceOperationResponse';
 import ServiceOperationStatuses from 'src/backend/common/enums/ServiceOperationStatuses';
+import { JwtService } from '@nestjs/jwt';
+import { Chat } from '../chat/chat.entity';
 
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
+    private readonly jwtService: JwtService
   ) {}
 
   async handleRegistration(req: express.Request) {
@@ -72,11 +75,25 @@ export class AuthService {
     const sessionData = req.session as ISessionAttributes;
 
     sessionData.user = user;
+    this.setAccessTokenForUserInSession(req, user);
   }
 
   logoutUser(req: express.Request) {
     const sessionData = req.session as ISessionAttributes;
 
-    sessionData.user = null
+    sessionData.user = null;
+    sessionData.accessToken = null;
+  }
+
+  setAccessTokenForUserInSession(req: express.Request, user: User): void {
+    const sessionData = req.session as ISessionAttributes;
+
+    sessionData.accessToken = this.jwtService.sign({id: user.id, email: user.email, chatIDs: user.chats ? user.chats.map((chat: Chat) => chat.id) : []});
+  }
+
+  getUserAccessToken(req: express.Request): string|null {
+    const sessionData = req.session as ISessionAttributes;
+
+    return sessionData.accessToken;
   }
 }

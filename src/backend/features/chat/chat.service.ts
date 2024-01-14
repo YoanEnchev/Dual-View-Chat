@@ -10,24 +10,27 @@ import IExtractChatMessages from './serviceOperationResponses/IExtractChatMessag
 import { ISessionAttributes } from 'src/backend/common/interfaces/session/ISessionAttributes';
 import IMessageJSONFormat from 'src/shared/interfaces/IMessageJSONFormat';
 import { Message } from '../message/message.entity';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @InjectRepository(Chat)
-    private chatRepository: Repository<Chat>,
+    private readonly authService: AuthService,
 
     @InjectRepository(Message)
-    private messageRepository: Repository<Message>,
+    private readonly messageRepository: Repository<Message>,
 
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
   ) {}
 
-  async initializeUserChatsIfNeeded(user: User): Promise<IInitializingUserChats> {
+  async initializeUserChatsIfNeeded(req: express.Request): Promise<IInitializingUserChats> {
+
+    const sessionData = req.session as ISessionAttributes;
+    const user: User = sessionData.user;
 
     // If chats are already created.
-    if (user.chats.length > 0) {
+    if (user.chats?.length > 0) {
       return { status: ServiceOperationStatuses.SUCCESS, chats: user.chats }
     }
 
@@ -43,7 +46,11 @@ export class ChatService {
           transactionalEntityManager.save(Chat, chat2)
         ]);
 
-        return { status: ServiceOperationStatuses.SUCCESS, chats: user.chats }
+        // Also update user chats in session:
+        user.chats = [chat1, chat2];
+        this.authService.setAccessTokenForUserInSession(req, user);
+
+        return { status: ServiceOperationStatuses.SUCCESS, chats: [chat1, chat2] }
       });
     }
     catch (error) {
